@@ -30,7 +30,19 @@ def format_forecast(data):
 
     for entry in forecast_list:
         dt = datetime.fromtimestamp(entry["dt"])
-        day_key = dt.strftime("%A, %d.%m.")
+        weekday_map = {
+    "Monday": "Montag",
+    "Tuesday": "Dienstag",
+    "Wednesday": "Mittwoch",
+    "Thursday": "Donnerstag",
+    "Friday": "Freitag",
+    "Saturday": "Samstag",
+    "Sunday": "Sonntag"
+}
+weekday_en = dt.strftime("%A")
+weekday_de = weekday_map.get(weekday_en, weekday_en)
+day_key = f"{weekday_de}, {dt.strftime('%d.%m.')}"
+
         daily[day_key].append(entry)
 
     summary = {}
