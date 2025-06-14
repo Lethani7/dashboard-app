@@ -1,6 +1,5 @@
 import os
 import datetime
-import pytz
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -46,5 +45,4 @@ def get_calendar_events(max_results=10):
         orderBy="startTime"
     ).execute()
 
-    events = events_result.get("items", [])
-    return events
+    return events_result.get("items", [])

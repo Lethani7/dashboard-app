@@ -5,7 +5,6 @@ from collections import defaultdict
 from urllib.parse import urlparse, parse_qs
 import pytz
 
-# Import Google Kalender-Module
 from google_calendar import authenticate_user, save_token_from_code, get_calendar_events
 
 # === Wetter-Config ===
@@ -22,7 +21,6 @@ weekday_map = {
     "Sunday": "Sonntag"
 }
 
-# === Wetter-Funktionen ===
 def get_weather(api_key, city):
     url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric&lang=de"
     response = requests.get(url)
@@ -35,7 +33,6 @@ def get_weather(api_key, city):
 def format_forecast(data):
     forecast_list = data["list"]
     daily = defaultdict(list)
-
     for entry in forecast_list:
         dt = datetime.fromtimestamp(entry["dt"])
         weekday_en = dt.strftime("%A")
@@ -61,9 +58,8 @@ def format_forecast(data):
 st.set_page_config(page_title="Dein Dashboard", layout="centered")
 st.title("📊 Persönliches Dashboard")
 
-# === Wetteranzeige ===
+# Wetteranzeige
 st.header("🌤 Wetter in Mosbach")
-
 weather_data = get_weather(API_KEY, CITY)
 if weather_data:
     daily_forecast = format_forecast(weather_data)
@@ -73,10 +69,10 @@ if weather_data:
         st.write(f"{info['desc']}")
         st.write(f"🌡️ {info['min']:.1f}°C – {info['max']:.1f}°C")
 
-# === Google Kalender ===
+# Google Kalender
 st.header("🗓️ Nächste Termine (Google Kalender)")
 
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 if "code" in query_params:
     code = query_params["code"][0]
     save_token_from_code(code)
