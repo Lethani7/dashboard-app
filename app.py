@@ -1,6 +1,14 @@
 import streamlit as st
 import requests
 from datetime import datetime
+import locale
+from collections import defaultdict
+
+# === Sprache für deutsche Wochentage setzen ===
+try:
+    locale.setlocale(locale.LC_TIME, "de_DE.UTF-8")  # für Unix/Mac
+except:
+    locale.setlocale(locale.LC_TIME, "deu")  # für Windows als Fallback
 
 # === CONFIG ===
 API_KEY = "45bf96ebdb4744385db2112b403a9032"
@@ -18,13 +26,27 @@ def get_weather(api_key, city):
 
 def format_forecast(data):
     forecast_list = data["list"]
-    daily = {}
+    daily = defaultdict(list)
+
     for entry in forecast_list:
         dt = datetime.fromtimestamp(entry["dt"])
-        day = dt.strftime("%A")
-        if day not in daily:
-            daily[day] = entry
-    return daily
+        day_key = dt.strftime("%A, %d.%m.")
+        daily[day_key].append(entry)
+
+    summary = {}
+    for day, entries in daily.items():
+        temps = [e["main"]["temp"] for e in entries]
+        temp_min = min([e["main"]["temp_min"] for e in entries])
+        temp_max = max([e["main"]["temp_max"] for e in entries])
+        icon = entries[0]["weather"][0]["icon"]
+        desc = entries[0]["weather"][0]["description"].capitalize()
+        summary[day] = {
+            "min": temp_min,
+            "max": temp_max,
+            "icon": icon,
+            "desc": desc
+        }
+    return summary
 
 # === UI ===
 st.set_page_config(page_title="Dein Dashboard", layout="centered")
@@ -35,11 +57,7 @@ weather_data = get_weather(API_KEY, CITY)
 if weather_data:
     daily_forecast = format_forecast(weather_data)
     for day, info in list(daily_forecast.items())[:3]:
-        temp = info["main"]["temp"]
-        desc = info["weather"][0]["description"].capitalize()
-        icon = info["weather"][0]["icon"]
-        icon_url = f"http://openweathermap.org/img/wn/{icon}@2x.png"
-
         st.subheader(f"{day}")
-        st.image(icon_url, width=60)
-        st.write(f"{desc}, {temp:.1f}°C")
+        st.image(f"http://openweathermap.org/img/wn/{info['icon']}@2x.png", width=60)
+        st.write(f"{info['desc']}")
+        st.write(f"🌡️ {info['min']:.1f}°C – {info['max']:.1f}°C")
