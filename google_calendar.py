@@ -29,8 +29,7 @@ def authenticate_user():
 def save_token_from_code(code):
     client_info = json.loads(st.secrets["google"]["client_info"])["web"]
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
-        # Wichtig: Der Block muss in "web" oder "installed" verpackt sein
-        json.dump({"web": client_info}, temp)
+        json.dump(client_info, temp)  # ✅ direkt das web-Objekt, ohne Klammer drum
         temp.flush()
         flow = Flow.from_client_secrets_file(
             temp.name,
@@ -41,6 +40,7 @@ def save_token_from_code(code):
         creds = flow.credentials
         with open("token.json", "w") as token:
             token.write(creds.to_json())
+
 
 
 def get_calendar_events(max_results=10):
