@@ -1,1 +1,63 @@
-...
+import os
+import datetime
+import json
+import tempfile
+import streamlit as st
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+
+
+def authenticate_user():
+    if os.path.exists("token.json"):
+        # Token bereits vorhanden – kein neuer Login notwendig
+        return None
+    else:
+        # Secrets aus Streamlit laden
+        client_info = json.loads(st.secrets["google"]["client_info"])["web"]
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
+            json.dump({"web": client_info}, temp)
+            temp.flush()
+            flow = Flow.from_client_secrets_file(
+                temp.name,
+                scopes=SCOPES,
+                redirect_uri='https://dashboard-app-7gfyvngg9oy99nqdnzmykn.streamlit.app/'
+            )
+            auth_url, _ = flow.authorization_url(prompt='consent')
+            return auth_url
+
+
+def save_token_from_code(code):
+    client_info = json.loads(st.secrets["google"]["client_info"])["web"]
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
+        json.dump({"web": client_info}, temp)
+        temp.flush()
+        flow = Flow.from_client_secrets_file(
+            temp.name,
+            scopes=SCOPES,
+            redirect_uri='https://dashboard-app-7gfyvngg9oy99nqdnzmykn.streamlit.app/'
+        )
+        flow.fetch_token(code=code)
+        creds = flow.credentials
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
+
+
+def get_calendar_events(max_results=10):
+    if not os.path.exists("token.json"):
+        return []
+    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    service = build("calendar", "v3", credentials=creds)
+
+    now = datetime.datetime.utcnow().isoformat() + "Z"
+    events_result = service.events().list(
+        calendarId="primary",
+        timeMin=now,
+        maxResults=max_results,
+        singleEvents=True,
+        orderBy="startTime"
+    ).execute()
+
+    return events_result.get("items", [])
