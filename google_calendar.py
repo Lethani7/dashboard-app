@@ -10,8 +10,20 @@ def authenticate_user():
     if os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
     else:
-        flow = Flow.from_client_secrets_file(
-            "client_secret.json",
+import streamlit as st
+import json
+import tempfile
+
+client_info = json.loads(st.secrets["google"]["client_info"])
+with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
+    json.dump(client_info, temp)
+    temp.flush()
+    flow = Flow.from_client_secrets_file(
+        temp.name,
+        scopes=SCOPES,
+        redirect_uri='https://<deine-app-id>.streamlit.app/'
+    )
+
             scopes=SCOPES,
             redirect_uri='http://localhost:8501/'
         )
