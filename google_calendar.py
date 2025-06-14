@@ -15,21 +15,21 @@ def authenticate_user():
     else:
         client_info = json.loads(st.secrets["google"]["client_info"])
         with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
-            json.dump({"web": client_info}, temp)
+            json.dump(client_info, temp)  # ✅ gesamte Struktur mit "web"
             temp.flush()
             flow = Flow.from_client_secrets_file(
                 temp.name,
                 scopes=SCOPES,
-                redirect_uri='https://dashboard-app-7gfyvngg9oy99nqdnzmykn.streamlit.app/'  # ❗ Anpassen
+                redirect_uri='https://dashboard-app-7gfyvngg9oy99nqdnzmykn.streamlit.app/'
             )
             auth_url, _ = flow.authorization_url(prompt='consent')
             return auth_url
     return None
 
 def save_token_from_code(code):
-    client_info = json.loads(st.secrets["google"]["client_info"])["web"]
+    client_info = json.loads(st.secrets["google"]["client_info"])
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
-        json.dump(client_info, temp)  # ✅ direkt das web-Objekt, ohne Klammer drum
+        json.dump(client_info, temp)  # ✅ gesamte Struktur mit "web"
         temp.flush()
         flow = Flow.from_client_secrets_file(
             temp.name,
@@ -40,8 +40,6 @@ def save_token_from_code(code):
         creds = flow.credentials
         with open("token.json", "w") as token:
             token.write(creds.to_json())
-
-
 
 def get_calendar_events(max_results=10):
     if not os.path.exists("token.json"):
