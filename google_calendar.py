@@ -27,7 +27,7 @@ def authenticate_user():
     return None
 
 def save_token_from_code(code):
-    client_info = json.loads(st.secrets["google"]["client_info"])
+    client_info = json.loads(st.secrets["google"]["client_info"])["web"]
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp:
         json.dump(client_info, temp)
         temp.flush()
